@@ -1,26 +1,6 @@
 from abc import ABC, abstractmethod
 
 class PersonAbstract(ABC):
-    @property
-    @abstractmethod
-    def pos_x(self, pos_x):
-        pass
-    
-    @property
-    @abstractmethod
-    def pos_y(self, pos_y):
-        pass
-
-    @pos_x.setter
-    @abstractmethod
-    def pos_x(self, pos_x):
-        self._pos_x = pos_x
-    
-    @pos_y.setter
-    @abstractmethod
-    def pos_y(self, pos_y):
-        self._pos_y = pos_y
-
     @abstractmethod
     def move(self):
         print('Движение')

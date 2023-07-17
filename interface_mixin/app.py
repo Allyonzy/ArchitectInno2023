@@ -60,11 +60,11 @@ class Person(InnerDataMixin):
             return "Меньше 18 лет"
     
 if __name__ == '__main__':
-    fib = Fibonacci()
+    fib = Fibonacci(2)
     print(fib.inner_data)
     print(fib.dict_data)
 
     person = Person()
-    person.age = 30
+    person.age = 15
     print(person.inner_data)
     print(person.dict_data)
