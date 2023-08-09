@@ -1,8 +1,38 @@
+/*
+Варианты работы с базой для аналитика
+1 вариант - мы можем проектировать, структурировать, явно менять БД
+CREATE, SELECT, UPDATE, INSERT, DELETE
+ALTER
+
+2 вариант - работаем с выделенной схемой для аналитиков
+CREATE, SELECT, UPDATE, INSERT, DELETE в рамках 1 схемы, но не всей БД
+Остальные таблицы - только на чтение 
+
+3 вариант - доступ к базе только на чтение, все новое согласовывается, можем создавать только VIEW (представление)
+
+
+Варианты запросов
+Тразнакция понятие, понятие доступа к БД
+https://postgrespro.ru/docs/postgresql/14/tutorial-transactions
+READ (SELECT) - не изменяет данные
+
+INSERT, UPDATE, ALTER, CREATE, DELETE|DROP - небезопасные команды 
+
+Аналитические команды
+OVER, PARTITION, LEAD, LAG, WINDOW
+https://www.postgresql.org/docs/current/functions-window.html
+https://www.postgresql.org/docs/current/tutorial-window.html
+
+
+Обновления по ограничениям (foreign key) https://postgrespro.ru/docs/postgresql/15/ddl-constraints?lang=en
+*/
+
 --- Создать БД ---
 CREATE DATABASE test_window;
 
 --- Создать схему ---
 CREATE SCHEMA employee;
+create schema statistics;
 
 --- Получить текущую схему, в которой по умолчанию ищется таблица ---
 show search_path;
@@ -17,6 +47,23 @@ CREATE TABLE IF NOT EXISTS client
 		name VARCHAR(100)
 	);
 
+--- Создать таблицу в схеме по умолчанию ---
+
+CREATE TABLE IF NOT EXISTS diabet (
+    person_id SERIAL PRIMARY KEY,
+    person_name VARCHAR(100),
+    pregnancies INTEGER,
+    glucose INTEGER,
+    blood_pressure INTEGER,
+    skin_thickness INTEGER,
+    insulin INTEGER,
+    bmi DOUBLE PRECISION,
+    diabetes_pedigree_func DOUBLE PRECISION,
+    age INTEGER,
+    outcome INTEGER
+  );
+
+
 --- Заполнить таблицу в схеме по умолчанию ---
 insert into client (client_id, name) 
 	values
@@ -27,6 +74,18 @@ insert into client (client_id, name)
 		(5, 'МаилРуГрупп'),
 		(6, 'АКБарс'),
 		(7, 'Иннотех Касперский');
+
+
+--- Заполнить таблицу в схеме по умолчанию ---
+insert into client (name) 
+	values
+		('Microsoft'),
+		('Yandex'),
+		('СберТех'),
+		('ВТБ'),
+		('МаилРуГрупп'),
+		('АКБарс'),
+		('Иннотех Касперский');
 
 --- Поменять текущую схему на список схем ---
 SET search_path TO employee, public;
