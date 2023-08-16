@@ -1,0 +1,222 @@
+/*
+Возьмите таблицу по продажам кофе:
+Идентификатор данных
+SALE_DTTM – точное время продажи (запрос на время продажи TIMESTAMP),
+CARD_NUMBER – номер скидочной карты (integer, вопрос - верно ли считан?)
+COFFEE_TYPE – название проданного кофейного напитка -> доп таблица с напитками
+COFFEE_PRICE - цена напитка -> вещественное число
+DISCOUNT – размер скидки в %? (вещественное число)
+GROCERY_FLG – флаг покупки выпечки в том же чеке -> доп таблица с выпечкой
+PRICE – полная стоимость в чеке (запрос по данным)
+
+('2020-04-01', 38, 'cappuccino', 130, 0.05, 1, 218.5),
+('2020-04-01', 28, 'cappuccino', 130, 0, 1, 230),
+('2020-04-01', 14, 'cappuccino', 130, 0.1, 0, 117),
+('2020-04-01', NULL, 'cappuccino', 130, 0.05, 1, 218.5),
+('2020-04-01', 7, 'cappuccino', 130, 0, 1, 230),
+('2020-04-01', 20, 'americano', 120, 0.05, 1, 209),
+('2020-04-01', 38, 'cappuccino', 130, 0.05, 0, 123.5),
+('2020-04-01', 18, 'cappuccino', 130, 0, 0, 130),
+('2020-04-01', 22, 'cappuccino', 130, 0.05, 1, 218.5),
+('2020-04-01', 10, 'cappuccino', 130, 0.1, 0, 117);
+*/
+
+CREATE SCHEMA cofee_shop;
+
+SET search_path TO cofee_shop, public;
+
+CREATE TABLE IF NOT EXISTS coffee_sales (
+    coffee_sales_id SERIAL PRIMARY KEY,
+    sale_dttm TIMESTAMP,
+    card_number INTEGER,
+    coffee_type VARCHAR(32) NOT NULL,
+    coffee_price DECIMAL,
+    discount DECIMAL(3,2),
+    grocery_flag SMALLINT,
+    price DECIMAL
+);
+
+COMMENT ON COLUMN coffee_sales.coffee_sales_id IS 'Идентификатор покупки в кофейне';
+
+ 	COMMENT ON COLUMN coffee_sales.coffee_sales_id IS 'Идентификатор покупки в кофейне';
+	COMMENT ON TABLE coffee_sales IS 'Таблица с данными продаж кофе';
+	
+	
+	SELECT c.oid FROM pg_catalog.pg_class c WHERE c.relname = 'coffee_sales';
+	
+	-- Прочитать комментарий о таблице в БД --
+	select pg_catalog.obj_description(25297); 
+	
+	-- Прочитать комментарий о столбце в в БД --
+	select pg_catalog.col_description(25297, 0);
+	
+	-- Прочитать комментарий о столбце в в БД --
+	select * from pg_catalog.pg_tables;
+	
+	-- Вывести данные комментариев за столбцы
+	select
+		c.table_schema,
+		c.table_name,
+		c.column_name,
+		pgd.description
+	from pg_catalog.pg_statio_all_tables as st
+	inner join pg_catalog.pg_description pgd on (
+		pgd.objoid = st.relid
+	)
+	inner join information_schema.columns c on (
+		pgd.objsubid   = c.ordinal_position and
+		c.table_schema = st.schemaname and
+		c.table_name   = st.relname
+	);
+
+	INSERT INTO coffee_sales (sale_dttm, card_number, coffee_type, coffee_price, discount, grocery_flag, price)
+    VALUES
+		('2020-04-01 13:33:15', 38, 'cappuccino', 130, 0.05, 1, 218.5),
+		('2020-04-01 13:45:12', 28, 'cappuccino', 130, 0, 1, 230),
+		('2020-04-01 18:01:13', 14, 'cappuccino', 130, 0.1, 0, 117),
+		('2020-04-01 11:52:10', NULL, 'cappuccino', 130, 0.05, 1, 218.5),
+		('2020-04-01 10:08:55', 7, 'cappuccino', 130, 0, 1, 230),
+		('2020-04-01 13:45:06', 20, 'americano', 120, 0.05, 1, 209),
+		('2020-04-01 13:53:12', 38, 'cappuccino', 130, 0.05, 0, 123.5),
+		('2020-04-01 16:58:08', 18, 'cappuccino', 130, 0, 0, 130),
+		('2020-04-01 10:52:15', 22, 'cappuccino', 130, 0.05, 1, 218.5),
+		('2020-04-01 18:01:30', 10, 'cappuccino', 130, 0.1, 0, 117);
+
+    INSERT INTO coffee_sales (sale_dttm, card_number, coffee_type, coffee_price, discount, grocery_flag, price)
+    VALUES
+		('2020-04-02 13:33:15', 38, 'cappuccino', 130, 0.05, 1, 218.5),
+		('2020-04-03 13:45:12', 28, 'cappuccino', 130, 0, 1, 230),
+		('2020-04-03 18:01:13', 14, 'cappuccino', 130, 0.1, 0, 117),
+		('2020-04-03 11:52:10', NULL, 'cappuccino', 130, 0.05, 1, 218.5),
+		('2020-04-03 10:08:55', 7, 'cappuccino', 130, 0, 1, 230),
+		('2020-04-05 13:45:06', 20, 'americano', 120, 0.05, 1, 209),
+		('2020-04-05 13:53:12', 38, 'cappuccino', 130, 0.05, 0, 123.5),
+		('2020-04-05 16:58:08', 18, 'cappuccino', 130, 0, 0, 130),
+		(CURRENT_TIMESTAMP, 22, 'cappuccino', 130, 0.05, 1, 218.5),
+		(CURRENT_TIMESTAMP, 10, 'cappuccino', 130, 0.1, 0, 117);
+
+/*
+    A. Выведите среднюю цену, предыдущую покупку по клиенту, уберите (отфильтруйте) клиентов без карты
+	
+    - карта 
+	- среднюю цену (avg(цена), sum(цена)/count(цена))
+	- предыдущую покупку по клиенту (lag)
+	- фильтр WHERE CARD_NUMBER IS NOT NULL
+	- если сортировки нет в задании (или не используется в подзапросах), то она не нужна
+
+	NaN <- null, NULL
+*/
+SELECT 
+    card_number,
+    SUM(price) OVER(PARTITION BY sale_dttm::date)/COUNT(price) OVER(PARTITION BY sale_dttm::date) AS average_price,
+    LAG(price) OVER (PARTITION BY card_number ORDER BY sale_dttm::date) AS previous_price
+FROM coffee_sales
+WHERE card_number IS NOT NULL
+GROUP BY card_number, sale_dttm::date, price;
+
+/*
+    B. Выведите клиента (card_number), который чаще всех покупал выпечку 
+    GROCERY_FLG
+    */
+
+INSERT INTO coffee_sales (sale_dttm, card_number, coffee_type, coffee_price, discount, grocery_flag, price)
+    VALUES
+		(CURRENT_TIMESTAMP, 38, 'cappuccino', 130, 0.05, 1, 250.0);
+-- TODO как переписать запрос?
+    SELECT 
+        card_number, 
+        COUNT(*) AS count_grocery
+    FROM coffee_sales
+    WHERE grocery_flag = 1
+    GROUP BY card_number
+    ORDER BY COUNT(*) DESC
+    LIMIT 1;
+/*
+    C. Кто из покупателей чаще покупает только кофе без выпечки
+*/
+
+SELECT 
+    card_number, 
+    COUNT(*) AS count_grocery
+FROM coffee_sales
+WHERE grocery_flag = 0
+GROUP BY card_number
+ORDER BY COUNT(*) DESC
+LIMIT 1;
+
+/*
+    D. Не меняя количество строк, добавить столбцы 
+    количество и сумма продаж кофейни за текущий день
+*/
+--Вариант составлению подзапроса --
+SELECT
+  sale_dttm::date,
+  COUNT(*) AS daily_sales,
+  SUM(price) AS daily_income
+FROM sales
+GROUP BY sale_dttm::date;
+
+/*
+    D+. Не меняя количество строк, добавить столбцы 
+    среднее значение продаж кофейни по типу кофе
+*/
+SELECT coffee_type, SUM(price)/COUNT(price) as mean
+FROM 
+(SELECT coffee_type,
+    price,
+    MIN(price) OVER(PARTITION BY coffee_type) as min, 
+    MAX(price) OVER(PARTITION BY coffee_type) as max
+FROM coffee_sales) sales
+WHERE price not in (min, max)
+GROUP BY coffee_type
+
+--Вариант с подзапросом по заданию --
+WITH statics_sales AS (
+		SELECT
+		  sale_dttm::date,
+		  COUNT(*) AS daily_sales,
+		  SUM(price) AS daily_income
+		FROM coffee_sales
+		GROUP BY sale_dttm::date
+	)
+	
+	
+SELECT *
+FROM coffee_sales cs
+JOIN statics_sales sts ON sts.sale_dttm = cs.sale_dttm::date;
+
+/*
+    E. Не меняя количество строк, добавить столбцы 
+    Количество и сумма покупок клиента (card_number) за текущий день
+*/
+
+--Вариант составлению подзапроса --
+SELECT
+  card_number,
+  sale_dttm::date,
+  COUNT(*) AS customer_daily_sales,
+  SUM(price) AS customer_daily_income
+FROM coffee_sales
+WHERE card_number IS NOT NULL
+GROUP BY card_number, sale_dttm::date;
+
+--Вариант с подзапросом по заданию --
+WITH statics_client AS (
+    SELECT
+        card_number,
+        sale_dttm::date,
+        COUNT(*) AS customer_daily_sales,
+        SUM(price) AS customer_daily_income
+    FROM coffee_sales
+    WHERE card_number IS NOT NULL
+    GROUP BY card_number, sale_dttm::date
+)
+
+SELECT *
+FROM coffee_sales cs
+JOIN statics_client stc 
+    ON ((stc.card_number = cs.card_number)
+    AND (stc.sale_dttm = cs.sale_dttm::date));
+
+
+
