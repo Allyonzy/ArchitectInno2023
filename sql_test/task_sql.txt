@@ -1,14 +1,14 @@
-* Создать view для select запросов
+Дополнительно: * Создать view для select запросов
 
 Задача a
 SELECT
 Фильтр 
-Сортировка
+Сортировка (ASC, DESC)
 
 Задача b
 select
 concat, format - формат строки
-сортировка ASC, DESC
+сортировка (ASC, DESC)
 
 Задача c
 Select
@@ -50,9 +50,12 @@ Select после
 Задача j
 Select 
 union, join, подзапросы 
+join, left join, right join, inner join
 Сортировка ASC
 
 Задача k
+Родной университет - в котором учится студент
+
 Select 
 join (with)
 where фильтры
