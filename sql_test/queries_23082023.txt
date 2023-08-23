@@ -1,0 +1,81 @@
+COMMENT ON TABLE course IS 'Таблица с данными курсов университета';
+
+DO $$
+DECLARE
+    -- Это однострочный комментарий.
+    /* А это — многострочный.
+       После каждого объявления ставится знак ';'.
+       Этот же знак ставится после каждого оператора.
+    */
+    num integer;
+    exclamation text := 'приветствую тебя'; -- также допускается = или DEFAULT
+BEGIN
+    num := 23654789; -- это присваивание
+    RAISE NOTICE '%, %!', cast(num AS text), exclamation; -- вывод сообщения
+END;
+$$;
+
+DO $$
+DECLARE
+    num integer NOT NULL := 0;
+    pi CONSTANT decimal := 3.14;
+BEGIN
+    pi := pi + num; -- ошибка
+END;
+$$;
+
+DO $$
+DECLARE
+    rec record;
+    cnt bigint;
+BEGIN
+    EXECUTE 'INSERT INTO student(id, city, name, telegram_contact, college_id) 
+                VALUES 
+                (60, ''Казань'', ''Андрей Аксёнов'', ''@andrey_aksyonov'', 10)
+             RETURNING id, city, name, telegram_contact, college_id'
+    INTO rec;
+    RAISE NOTICE '%', rec;
+    GET DIAGNOSTICS cnt = ROW_COUNT;
+    RAISE NOTICE 'Добавлено строк: %', cnt;
+END;
+$$;
+
+insert into student(id, city, name, telegram_contact, college_id) 
+values (50, 'Казань','Андрей Аксёнов','@andrey_aksyonov',10);
+
+CREATE OR REPLACE FUNCTION describe() RETURNS trigger
+AS $$
+DECLARE
+    rec record;
+    str text := '';
+BEGIN
+    IF TG_LEVEL = 'ROW' THEN
+        CASE TG_OP
+            WHEN 'DELETE' THEN rec := OLD; str := OLD::text;
+            WHEN 'UPDATE' THEN rec := NEW; str := OLD || ' -> ' || NEW;
+            WHEN 'INSERT' THEN rec := NEW; str := NEW::text;
+        END CASE;
+    END IF;
+    RAISE NOTICE '% % % %: %',
+        TG_TABLE_NAME, TG_WHEN, TG_OP, TG_LEVEL, str;
+    RETURN rec;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE TABLE library(
+    lib_id SERIAL PRIMARY KEY,
+    college_id bigint not null,
+    constraint fk_lib_college_id foreign key (college_id) references college(id)
+);
+
+CREATE TRIGGER lib_before_stmt
+BEFORE INSERT OR UPDATE OR DELETE -- события
+ON library                        -- таблица
+FOR EACH STATEMENT                -- уровень
+EXECUTE FUNCTION describe();
+
+CREATE TRIGGER lib_after_stmt
+AFTER INSERT OR UPDATE OR DELETE ON library
+FOR EACH STATEMENT EXECUTE FUNCTION describe();
