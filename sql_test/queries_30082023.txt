@@ -1,0 +1,47 @@
+with find_model as (
+	select 
+		f.flight_no, 
+		f.aircraft_code, 
+		a.model
+	from flights f
+	join aircrafts a on a.aircraft_code = f.aircraft_code
+)
+
+select		fv.flight_no as "Номер рейса",
+			fm.model as "Тип самолета",
+			fv.scheduled_departure::date as "Плановая дата",
+			fv.scheduled_departure::time as "Плановое время",
+			fv.scheduled_arrival::date as "Плановая дата вылета",
+			fv.scheduled_arrival::time as "Плановое время вылета",
+			fv.scheduled_duration as "Длительность полета",			
+			fv.departure_city as "Город отправления",
+			fv.departure_airport as "Аэропорт"
+
+from flights_v fv
+join find_model fm on fm.flight_no = fv.flight_no
+limit 20;
+
+with find_model as (
+	select 
+		f.flight_no, 
+		f.aircraft_code, 
+		a.model
+	from flights f
+	join aircrafts a on a.aircraft_code = f.aircraft_code
+)
+
+select		fv.flight_no as "Номер рейса",
+			fm.model as "Тип самолета",
+			fv.scheduled_duration as "Длительность полета",			
+			fv.departure_city as "Город отправления",
+			fv.departure_airport as "Аэропорт",
+			count(fv.flight_no)
+
+from flights_v fv
+join find_model fm on fm.flight_no = fv.flight_no
+group by fv.flight_no, fm.model, fv.scheduled_duration, fv.departure_city, fv.departure_airport 
+limit 20;
+
+select * from aircrafts;
+
+set search_path=bookings, pg_catalog;
