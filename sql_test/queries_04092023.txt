@@ -1,6 +1,6 @@
 create schema university_scores;
 
-set search_path = "university_scores, public, pg_catalog";
+set search_path = "university_scores, public";
 
 show search_path;
 
@@ -8,7 +8,7 @@ show search_path;
 
 create table if not exists university_scores.students (
 	id SERIAL PRIMARY KEY,
-	name TEXT,
+	name VARCHAR(200),
 	total_score INTEGER
 );
 
@@ -67,3 +67,55 @@ create trigger update_scholarship_trigger
 after update on university_scores.activity_scores
 for each row 
 execute function update_scholarship();
+
+-- Создаем функцию update_total_score
+/*
+ * 
+ * update_total_score(student_id INTEGER):
+	пересчитывать общий балл студента
+	activity_scores
+	цикл для итерации по всем записям в
+	activity_scores для заданного student_id
+	total_score для соответствующего студента в
+	таблице students суммой всех баллов
+	триггер, который будет автоматически вызывать функцию
+	update_total_score при вставке новых записей в таблицу
+	activity_scores
+*/
+create or replace function update_total_score (student_id INTEGER)
+returns INTEGER as $$
+	declare 
+		total_score INTEGER;
+	begin 
+		-- Получить общий балл студента
+		-- Сделать выборку (SELECT) по таблице студентов
+		-- TODO SELECT .. INTO student_total_score ...
+		-- select sum(score) into total_score ...
+	return total_score;
+	end;
+
+$$ language plpgsql;
+
+CREATE OR REPLACE FUNCTION update_scores_wrapper()
+RETURNS TRIGGER AS 
+$$
+	begin 
+		-- вызываем функцию update_total_score 
+		-- для соответствующего студента
+		select update_total_score(new.student_id) into new.total_score
+		
+		return new;
+	end;
+$$ language plpgsql;
+
+create trigger update_total_score_trigger
+after update on university_scores.activity_scores
+for each row 
+execute function update_total_score();
+
+
+
+
+
+
+
