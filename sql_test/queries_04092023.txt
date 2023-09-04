@@ -1,0 +1,69 @@
+create schema university_scores;
+
+set search_path = "university_scores, public, pg_catalog";
+
+show search_path;
+
+--Создаем таблицу students
+
+create table if not exists university_scores.students (
+	id SERIAL PRIMARY KEY,
+	name TEXT,
+	total_score INTEGER
+);
+
+--Создаем таблицу activity_scores
+create table if not exists university_scores.activity_scores (
+	id SERIAL PRIMARY KEY,
+	student_id INTEGER,
+	activity_type VARCHAR(150),
+	score INTEGER,
+	
+	FOREIGN KEY (student_id) REFERENCES university_scores.students(id)
+);
+
+-- реализация функции
+CREATE OR REPLACE 
+FUNCTION calculate_scholarship(student_id INTEGER)
+returns INTEGER as 
+$$
+	declare 
+		--объявим переменную
+		student_total_score INTEGER;
+		scholarship_total INTEGER;
+	begin 
+		-- Получить общий балл студента
+		-- Сделать выборку (SELECT) по таблице студентов
+		-- TODO SELECT .. INTO student_total_score ...
+		-- Рассчитать стипендию в зависимостит от параметра
+		
+		if student_total_score >= 90 then 
+			-- чему равна степендия?;
+		elsif student_total_score >= 80 then 
+			-- чему равна степендия?;
+		else
+			-- чему равна степендия?;
+		end if;
+	end
+	
+	
+	return scholarship_total;
+	end;
+$$ language plpgsql;
+
+CREATE OR REPLACE FUNCTION update_scholarship()
+RETURNS TRIGGER AS 
+$$
+	begin 
+		-- вызываем функцию calculate_scholarship 
+		-- для соответствующего студента
+		-- TODO SELECT ... (NEW.student_id) INTO NEW.score
+		
+		return new;
+	end;
+$$ language plpgsql;
+
+create trigger update_scholarship_trigger
+after update on university_scores.activity_scores
+for each row 
+execute function update_scholarship();
