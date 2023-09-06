@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2 import Error, sql
 
-DATABASE = "test_db"
+DATABASE = "demo"
 USER = "postgres"
 PASSWORD = "88888888"
 LOCALHOST = "127.0.0.1"
@@ -38,23 +38,36 @@ CREAT_TABLE_DIABETES = '''
 
 INSERT_DIABET_DATA = """INSERT INTO diabet (Insulin, BMI) VALUES (%s, %s)"""
 
+SET_PATH = '''SET search_path = bookings;'''
+
+READ_DEMO_BOARDING_INFO = '''
+select
+	'Без посадочного талона' as "Статус брони",
+	COUNT(b.book_ref) AS "Количество броней"
+FROM bookings b
+JOIN tickets t ON t.book_ref = b.book_ref
+LEFT JOIN boarding_passes bp ON bp.ticket_no = t.ticket_no
+WHERE bp.boarding_no IS null;
+'''
+
 try:
-    connection = psycopg2.connect(dbname="test_db", user=USER, password=PASSWORD, host=LOCALHOST, port=PORT)
+    connection = psycopg2.connect(dbname=DATABASE, user=USER, password=PASSWORD, host=LOCALHOST, port=PORT)
     curs = connection.cursor()
 
     print("Информация по подключению")
     print(connection.get_dsn_parameters())
 
-    curs.execute(CREAT_TABLE_DIABETES)
+    # curs.execute(CREAT_TABLE_DIABETES)
 
-    curs.execute(INSERT_DIABET_DATA, (4, 56.7))
+    # curs.execute(INSERT_DIABET_DATA, (4, 56.7))
 
-    database = 'diabet'
-    sql = READ_ALL_OPERATIONS % database
+    # database = 'diabet'
+    # sql = READ_ALL_OPERATIONS % database
 
-    print(sql)
+    # print(sql)
 
-    curs.execute(sql)
+    curs.execute(SET_PATH)
+    curs.execute(READ_DEMO_BOARDING_INFO)
 
     record = curs.fetchone()
     print(f"Текущая запись {record}")

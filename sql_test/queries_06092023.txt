@@ -1,0 +1,99 @@
+/*
+ * произвольные две таблицы из модели данных
+	необходимо объединить их различными способами 
+	(UNION , JOIN)
+ * 
+ * */
+
+select
+	'Без посадочного талона' as "Статус брони",
+	COUNT(b.book_ref) AS "Количество броней"
+FROM bookings b
+JOIN tickets t ON t.book_ref = b.book_ref
+LEFT JOIN boarding_passes bp ON bp.ticket_no = t.ticket_no
+WHERE bp.boarding_no IS null
+
+UNION
+
+select
+	'С посадочным талоном' as "Статус брони",
+	COUNT(b.book_ref) AS "Количество броней"
+FROM bookings b
+JOIN tickets t ON t.book_ref = b.book_ref
+LEFT JOIN boarding_passes bp ON bp.ticket_no = t.ticket_no
+WHERE bp.boarding_no IS not null
+
+/*
+ * Запрос с любым фильтром WHERE
+	и результат отсортируйте(ORDER BY)
+	с ограничением вывода по количеству строк(LIMIT)
+ */
+*/
+select 
+	sum(tfl.amount) as "Сумма продаж билетов",
+	a.airport_name as "Аэропорт",
+	tfl.fare_conditions as "Класс билета"
+from ticket_flights tfl
+join boarding_passes bps on bps.ticket_no = tfl.ticket_no 
+join flights f on f.flight_id = bps.flight_id
+join airports a on a.airport_code = f.departure_airport
+where tfl.fare_conditions in ('Business', 'Comfort')
+group by tfl.fare_conditions, a.airport_name
+order by "Сумма продаж билетов" desc
+limit 10;
+
+--3)Используя SQL язык напишите OLAP запрос 
+--(в рамках JOIN оператора),
+--используя оператор GROUP BY 
+-- и любые агрегатные функции count, min, max, sum.
+
+with boarding_info as (
+	select 
+		f.flight_id,
+		f.flight_no,
+		f.aircraft_code,
+		f.departure_airport,
+		f.scheduled_departure,
+		f.actual_departure,
+		count(bp.boarding_no) as boarded_count
+	from flights f 
+	join boarding_passes bp on bp.flight_id = f.flight_id 
+	where f.actual_departure is not null
+	group by f.flight_id 	
+),
+
+max_seats_by_aircraft as(
+	select 
+		s.aircraft_code,
+		count(s.seat_no) as max_seats
+	from seats s 
+	group by s.aircraft_code 
+)
+
+select 
+	b.flight_no as "Номер рейса",
+	b.departure_airport as "Аэропорт вылета",
+	b.scheduled_departure as "Время вылета по расписанию",
+	b.actual_departure as "Фактическое время вылета",
+	b.boarded_count as "Количество регистраций",
+	(m.max_seats - b.boarded_count) as "Количество свободных мест", 
+	round((m.max_seats - b.boarded_count) / m.max_seats :: dec, 2) * 100 as "Процент свободных мест",
+	sum(b.boarded_count) over (partition by (b.departure_airport, b.actual_departure::date) order by b.actual_departure) 
+	as "Накопительный итог"
+from boarding_info b
+join max_seats_by_aircraft m on m.aircraft_code = b.aircraft_code;
+
+--4)Используя SQL язык примените JOIN операторы 
+-- (INNER, LEFT, RIGHT)для более чем двух таблиц из модели данных.
+
+create or replace view passenger_seats_info as (
+	SELECT 
+		t.passenger_name, 
+		tf.flight_id, 
+		b.seat_no
+	FROM tickets t
+	INNER JOIN ticket_flights tf ON t.ticket_no = tf.ticket_no
+	LEFT JOIN boarding_passes b 
+	ON tf.ticket_no = b.ticket_no 
+	AND tf.flight_id = b.flight_id
+);
