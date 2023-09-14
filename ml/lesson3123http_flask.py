@@ -75,6 +75,7 @@ def load_model():
         model.load_model('flat_model.cbm')
 
 # Метод для обучения модели
+# localhost:port/train
 @app.route('/train', methods=['GET'])
 def train():
     try:
@@ -85,6 +86,7 @@ def train():
         return jsonify({'error': str(e)})
 
 # Метод для классификации новой квартиры
+# localhost:port/classify
 @app.route('/classify', methods=['GET'])
 def classify():
     try:
@@ -110,6 +112,9 @@ def classify():
         return f"Category: {predicted_category}"
     except Exception as e:
         return jsonify({'error': str(e)})
+
+# *POST - отправление новых данных на сервер для сохранения
+# *Новую строку можем послать для классификации
 
 if __name__ == '__main__':
     load_model()

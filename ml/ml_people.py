@@ -2,30 +2,33 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder # кодирование категориальных
+from sklearn.feature_selection import SelectKBest # выбор признаков
+from sklearn.feature_selection import chi2 # выбор по Хи квадрат
 
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
-
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split # деление на тест и обучение
+# 0.2 тестовой к 0.8, 0.3 к 0.7 тренировочной
 
 from catboost import CatBoostClassifier #ставим дополнительно через pip или conda
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+# критерий качества, точность accuracy
+# precision_score, recall_score, f1_score (confusion_matrix)
 
-#работа с моделью в браузере (подключение)
+# работа с моделью в браузере (подключение)
+# * реализовать интерфейсную часть (API)
 from flask import Flask, request, jsonify
 
 #TODO добавить Flask
 
 # Набор констант по программе
-MODEL_FILE_EFF = 'people_university_model_eff.cbm'
-MODEL_FILE = 'people_university_model.cbm'
-DF_COUNT = 2001
-SUBJ_COUNT = 6
-MIN_GRADE = 0
-MAX_GRADE = 99
-FINAL_RESULT_LIST = ['удовлетворительно', 'хорошо', 'отлично']
+MODEL_FILE_EFF = 'people_university_model_eff.cbm' # модель с 3 лучшими признаками
+MODEL_FILE = 'people_university_model.cbm' # модель 
+DF_COUNT = 2001  # число строк 
+SUBJ_COUNT = 6  # число предметов
+MIN_GRADE = 0  # мин балл
+MAX_GRADE = 99  # макс балл
+FINAL_RESULT_LIST = ['удовлетворительно', 'хорошо', 'отлично']  # результат теста
 
 # Набор def и классов
 
@@ -47,12 +50,13 @@ def generate_students():
     Создать из датасета DataFrame
     '''
     def generate_final(row):
+        # TODO поменять random
         # Балл ниже 30 - удовл
-        cond_c = row['mean_score'] < 50
-        # Балл 50 - 70 - хор
+        cond_c = row['mean_score'] < 30
+        # Балл 50 - 60 - хор
         cond_b = row['mean_score'] >= 50 
         cond_b_1 = row['mean_score'] < 60
-        # Балл 70 - 100 - отл
+        # Балл 60 - 100 - отл
         cond_a = row['mean_score'] >= 60
         val = ''
         if(cond_c):
@@ -69,10 +73,11 @@ def generate_students():
     grades = np.random.randint(MIN_GRADE, MAX_GRADE + 1, (DF_COUNT, SUBJ_COUNT))
     student_scores = pd.DataFrame (grades, columns = subjects)
     
-    student_scores.sum(axis=0)
+    student_scores.sum(axis=0) # axis 1 - по столбцам, axis 0 - построчно, сумма
     student_scores['mean_score'] = np.round((student_scores.sum(axis=1)/SUBJ_COUNT), 3)
     print(student_scores.head(5))
     
+    # apply - применить функцию к датасету
     student_scores['final_lab'] = student_scores.apply(generate_final, axis=1)
     return student_scores
 
@@ -114,15 +119,16 @@ y - результирующий столбец, Final lab <- LabelEncoder()
 '''
 df = pd.read_csv('ml/student.csv')
 X = df.drop(columns=['final_lab', 'mean_score'], axis=1)
+# X = df.drop(columns=['final_lab'], axis=1)
 print(X)
-y = df['final_lab']
+y = df['final_lab'] #Series
 print(y)
 label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(y)
 print(y)
 
 # 2. Выберите лучшие 3 признака для обучения
-selector = SelectKBest(chi2, k=2)
+selector = SelectKBest(chi2, k=3)
 X_new = selector.fit_transform(X, y)
 
 # 3. Разбейте датасет на тестовую и обучающую выборку train_test_split (для лучших признаков)
@@ -154,10 +160,28 @@ y_pred = model.predict(X_test)
 
 # Оцениваем точность модели
 accuracy_eff = accuracy_score(y_test_eff, y_pred_eff)
-print(f"Точность модели: {accuracy_eff}")
+print(f"Правильность (accuracy) модели: {accuracy_eff}")
+
+precision_eff = precision_score(y_test_eff, y_pred_eff, average='weighted')
+print(f"Точность (precision) модели: {precision_eff}")
+
+recall_eff = recall_score(y_test_eff, y_pred_eff, average='weighted')
+print(f"Полнота (recall) модели: {recall_eff}")
+
+f1_eff = f1_score(y_test_eff, y_pred_eff, average='weighted')
+print(f"F1 мера модели: {f1_eff}")
 
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Точность модели: {accuracy}")
+
+precision = precision_score(y_test, y_pred, average='weighted')
+print(f"Точность (precision) модели: {precision}")
+
+recall = recall_score(y_test, y_pred, average='weighted')
+print(f"Полнота (recall) модели: {recall}")
+
+f1 = f1_score(y_test, y_pred, average='weighted')
+print(f"F1 мера модели: {f1}")
 
 # # Сохранить модель
 
