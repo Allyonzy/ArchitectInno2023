@@ -15,6 +15,7 @@ https://colab.research.google.com/drive/128KXJlMWvuGIaDgmo3RF5Nf4O9puMqQL?usp=sh
 Рассчитайте модель kNN для k = 5, 10, 15, 20, 25. 
 Укажите объем тестового набора данных равным 25% от общего количества данных.
 75 на 25
+
 Укажите score модели и постройте визуализацию обученной классификации для указанных k.
 https://scikit-learn.ru/3-3-metrics-and-scoring-quantifying-the-quality-of-predictions/ 
 A, P, R, F1
@@ -40,10 +41,11 @@ https://colab.research.google.com/drive/1ozolk-cjgIzrW7n__Z77EmPP6lYxYIQI?authus
 Функция импорта данных
 class DiabetInfo
 Функция обработки данных под модель
+Функцию eda - отчет с логом
 Алгоритм knn
 Алгоритм регрессии
 Алгоритм 3 (SVM, DecisionTree, Полиномиальная)
-Оценка качества
+Оценка качества - отчет с логом
 Визуализация - отдельно для регрессии, отдельно для классификации
 Экспорт алгоритма (модель)
 Проверка на экпортированной модели
