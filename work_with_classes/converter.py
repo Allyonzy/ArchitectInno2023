@@ -52,5 +52,8 @@ class ConverterMToKmAndMiles:
     def __str__(self):
         return "ConverterMToKmAndMiles metres: {0}, km: {1}".format(self.__metres, self.__km)
     
-    
-    
+if __name__ == "__main__":
+    print('test')
+
+
+
